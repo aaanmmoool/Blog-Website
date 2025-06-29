@@ -6,12 +6,12 @@ import DOMPurify from 'isomorphic-dompurify';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { slug: string } }
+  { params }: { params: Promise<{ slug: string }> }
 ) {
   try {
     await dbConnect();
 
-    const { slug } = params;
+    const { slug } = await params;
 
     const post = await Post.findOne({ slug });
 
@@ -45,12 +45,12 @@ export async function GET(
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { slug: string } }
+  { params }: { params: Promise<{ slug: string }> }
 ) {
   try {
     await dbConnect();
 
-    const { slug } = params;
+    const { slug } = await params;
     const { title, content } = await request.json();
 
     if (!title || !content) {
@@ -124,12 +124,12 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { slug: string } }
+  { params }: { params: Promise<{ slug: string }> }
 ) {
   try {
     await dbConnect();
 
-    const { slug } = params;
+    const { slug } = await params;
 
     const post = await Post.findOne({ slug });
 
