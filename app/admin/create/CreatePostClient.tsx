@@ -20,6 +20,7 @@ export default function CreatePostClient() {
   const [slug, setSlug] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [debugInfo, setDebugInfo] = useState<string | null>(null);
 
   // Auto-generate slug from title
   useEffect(() => {
@@ -45,8 +46,11 @@ export default function CreatePostClient() {
 
     setLoading(true);
     setError(null);
+    setDebugInfo(null);
 
     try {
+      console.log('Submitting post with data:', { title: title.trim(), content: content.trim() });
+      
       const response = await fetch('/api/posts/create', {
         method: 'POST',
         headers: {
@@ -58,15 +62,29 @@ export default function CreatePostClient() {
         }),
       });
 
+      console.log('Response status:', response.status);
+      console.log('Response headers:', Object.fromEntries(response.headers.entries()));
+
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to create post');
+        const errorData = await response.json().catch(() => ({ error: 'Failed to parse error response' }));
+        console.error('Error response:', errorData);
+        throw new Error(errorData.error || `HTTP ${response.status}: ${response.statusText}`);
       }
 
       const data = await response.json();
-      router.push('/admin');
+      console.log('Success response:', data);
+      
+      setDebugInfo(`Post created successfully! ID: ${data.post?.id}, Slug: ${data.post?.slug}`);
+      
+      // Redirect after a short delay to show success message
+      setTimeout(() => {
+        router.push('/admin');
+      }, 2000);
+      
     } catch (err) {
+      console.error('Error creating post:', err);
       setError(err instanceof Error ? err.message : 'Failed to create post');
+      setDebugInfo(`Error details: ${err instanceof Error ? err.stack : 'Unknown error'}`);
     } finally {
       setLoading(false);
     }
@@ -82,6 +100,9 @@ export default function CreatePostClient() {
       ['link', 'image', 'blockquote', 'code-block'],
       ['clean']
     ],
+    clipboard: {
+      matchVisual: false,
+    },
   };
 
   const quillFormats = [
@@ -148,13 +169,20 @@ export default function CreatePostClient() {
                 formats={quillFormats}
                 placeholder="Write your post content..."
                 style={{ height: '400px' }}
+                theme="snow"
               />
             </div>
           </div>
 
           {error && (
             <div className="bg-red-50 border border-red-200 rounded-md p-4">
-              <div className="text-red-800">{error}</div>
+              <div className="text-red-800 font-medium">Error: {error}</div>
+            </div>
+          )}
+
+          {debugInfo && (
+            <div className="bg-blue-50 border border-blue-200 rounded-md p-4">
+              <div className="text-blue-800 font-medium">Debug Info: {debugInfo}</div>
             </div>
           )}
         </form>
