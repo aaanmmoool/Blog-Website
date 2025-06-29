@@ -23,11 +23,26 @@ export default function AdminPage() {
 
   const fetchPosts = async () => {
     try {
-      const response = await fetch('/api/posts');
+      const url = `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/api/posts`;
+      console.log('Fetching posts from:', url);
+      
+      const response = await fetch(url, {
+        cache: 'no-store',
+        headers: {
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0'
+        }
+      });
+      console.log('Response status:', response.status);
+      console.log('Response headers:', Object.fromEntries(response.headers.entries()));
+      
       if (!response.ok) {
-        throw new Error('Failed to fetch posts');
+        throw new Error(`Failed to fetch posts: ${response.status} ${response.statusText}`);
       }
+      
       const data = await response.json();
+      console.log('Posts data:', data);
       setPosts(data.posts || []);
     } catch (err) {
       setError('Failed to load posts');
@@ -45,7 +60,7 @@ export default function AdminPage() {
     setDeletingSlug(slug);
 
     try {
-      const response = await fetch(`/api/posts/${slug}`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/api/posts/${slug}`, {
         method: 'DELETE',
       });
 
@@ -105,15 +120,27 @@ export default function AdminPage() {
               Manage your blog posts and content
             </p>
           </div>
-          <Link
-            href="/admin/create"
-            className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors duration-200 flex items-center space-x-2"
-          >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-            </svg>
-            <span>Create New Post</span>
-          </Link>
+          <div className="flex space-x-3">
+            <button
+              onClick={fetchPosts}
+              disabled={loading}
+              className="bg-gray-600 text-white px-4 py-3 rounded-lg hover:bg-gray-700 transition-colors duration-200 flex items-center space-x-2 disabled:opacity-50"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              </svg>
+              <span>{loading ? 'Loading...' : 'Refresh'}</span>
+            </button>
+            <Link
+              href="/admin/create"
+              className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors duration-200 flex items-center space-x-2"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+              </svg>
+              <span>Create New Post</span>
+            </Link>
+          </div>
         </div>
 
         {posts.length === 0 ? (
