@@ -127,6 +127,7 @@ Blog Website/
    ```
    MONGODB_URI=your_mongodb_connection_string
    NEXTAUTH_SECRET=your_nextauth_secret
+   ADMIN_USERNAME=admin
    NEXTAUTH_URL=http://localhost:3000
    ```
 
